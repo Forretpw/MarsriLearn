@@ -668,11 +668,6 @@
             });
         }
 
-            // Обычные файлы
-            const path = './audio/' + filename + '.wav';
-            new Audio(path).play().catch(e => console.log('Audio missing: ' + path));
-        }
-
         function playSyllable(consonant, vowel) {
             let filename;
             if (consonant === 'k') {
