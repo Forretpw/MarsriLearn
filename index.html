@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Марсриянский язык</title>
+    <style>
+        :root {
+            --primary: #58cc02; /* Duolingo green */
+            --primary-dark: #46a302;
+            --secondary: #1cb0f6; /* Blue */
+            --secondary-dark: #1899d6;
+            --danger: #ff4b4b;
+            --danger-dark: #d42c2c;
+            --gray: #e5e5e5;
+            --text: #4b4b4b;
+            --white: #ffffff;
+            --shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f7f7f7;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            display: none;
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER & MENU --- */
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        h1 {
+            color: var(--secondary);
+            margin-bottom: 30px;
+        }
+
+        .menu-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .menu-card {
+            background: var(--white);
+            border: 2px solid var(--gray);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.1s;
+            box-shadow: 0 4px 0 var(--gray);
+        }
+
+        .menu-card:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .menu-card h3 {
+            margin-bottom: 5px;
+            color: var(--text);
+        }
+
+        .menu-card p {
+            color: #777;
+            font-size: 0.9em;
+        }
+
+        /* --- GAME UI --- */
+        .progress-container {
+            width: 100%;
+            height: 16px;
+            background: var(--gray);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-area {
+            text-align: center;
+            margin-bottom: 30px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .prompt-text {
+            font-size: 1.2rem;
+            color: #777;
+            margin-bottom: 10px;
+        }
+
+        .target-word {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        /* --- OPTIONS (Standard Quiz) --- */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-option {
+            background: var(--white);
+            border: 2px solid var(--gray);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--gray);
+            text-align: left;
+            position: relative;
+        }
+
+        .btn-option:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-option.selected {
+            border-color: var(--secondary);
+            background: #e1f5fe;
+        }
+
+        /* --- SENTENCE BUILDER --- */
+        .sentence-slot-area {
+            min-height: 60px;
+            border-bottom: 2px solid var(--gray);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 5px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .word-chip {
+            background: var(--white);
+            border: 1px solid var(--gray);
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 2px 0 var(--gray);
+            user-select: none;
+        }
+
+        .word-chip:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        /* --- SYLLABLE LESSON --- */
+        .syllable-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .voice-toggle {
+            padding: 5px 10px;
+            border: 1px solid var(--secondary);
+            border-radius: 20px;
+            background: white;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+        
+        .voice-toggle.active {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .syllable-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .syllable-card {
+            aspect-ratio: 1;
+            background: white;
+            border: 2px solid var(--gray);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 0 var(--gray);
+        }
+        
+        .syllable-card:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .syllable-main {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .syllable-sub {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* --- FOOTER ACTION BAR --- */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px; /* Increased padding */
+            padding-bottom: 40px; /* Extra padding for mobile safe areas */
+            background: var(--white);
+            border-top: 2px solid var(--gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .action-bar.hidden {
+            display: none;
+        }
+
+        .action-bar.correct {
+            background: #d7ffb8;
+            border-color: #b8f28b;
+            color: #58a700;
+        }
+
+        .action-bar.wrong {
+            background: #ffdfe0;
+            border-color: #ffb8b8;
+            color: #ea2b2b;
+        }
+
+        .btn-check {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 0 var(--primary-dark);
+            cursor: pointer;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .btn-check:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        
+        .btn-check.secondary {
+            background: var(--secondary);
+            box-shadow: 0 4px 0 var(--secondary-dark);
+        }
+
+        .feedback-msg {
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-grow: 1;
+            margin-right: 20px;
+        }
+
+        /* --- CREDIT --- */
+        .credit {
+            position: fixed;
+            bottom: 5px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: #aaa;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .audio-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-menu" class="screen active">
+        <header>
+            <h1>Марсриянский</h1>
+        </header>
+        <div class="menu-grid">
+            <div class="menu-card" onclick="startApp('words')">
+                <h3>Слова</h3>
+                <p>Базовый словарь</p>
+            </div>
+            <div class="menu-card" onclick="startApp('pronunciation')">
+                <h3>Произношение</h3>
+                <p>Тренировка слуха</p>
+            </div>
+            <div class="menu-card" style="border-color: var(--secondary); box-shadow: 0 4px 0 var(--secondary-dark);" onclick="startApp('sentences')">
+                <h3 style="color: var(--secondary)">Предложения</h3>
+                <p>Перевод</p>
+            </div>
+            <div class="menu-card" onclick="startApp('lessons')">
+                <h3>Урок: Слоги</h3>
+                <p>K, N, M с аудио</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+        <button class="back-btn" onclick="showMenu()">← Назад</button>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="question-area" id="questionArea">
+            </div>
+
+        <div class="action-bar" id="actionBar">
+            <div class="feedback-msg" id="feedbackMsg"></div>
+            <button class="btn-check" id="checkBtn" onclick="checkAnswer()">Проверить</button>
+            <button class="btn-check secondary" id="nextBtn" onclick="nextQuestion()" style="display:none">Далее</button>
+        </div>
+    </div>
+
+    <div id="screen-lesson" class="screen">
+        <button class="back-btn" onclick="showMenu()">← Назад</button>
+        <h2>Слоги</h2>
+        <p style="margin-bottom: 15px; color: #666;">Нажми на слог, чтобы услышать.</p>
+        
+        <div class="syllable-controls">
+            <span>Голос для K:</span>
+            <button class="voice-toggle active" onclick="setVoice('ritsu')" id="voice-ritsu">(1)</button>
+            <button class="voice-toggle" onclick="setVoice('nurse')" id="voice-nurse">(2)</button>
+        </div>
+
+        <div class="syllable-grid" id="syllableGrid">
+            </div>
+    </div>
+
+    <div id="screen-results" class="screen" style="text-align: center; justify-content: center;">
+        <h2 style="font-size: 2rem; margin-bottom: 20px;">Урок завершён!</h2>
+        <p id="resultText" style="font-size: 1.2rem; color: #666; margin-bottom: 40px;"></p>
+        <button class="btn-check" onclick="showMenu()">В меню</button>
+    </div>
+
+    <div class="credit">Audio generated by VOICEVOX</div>
+
+    <script>
+        // --- DATA ---
+        const dictionary = [
+            {word: "ma", translation: "я", transcription: "/ma/"},
+            {word: "teu", translation: "ты", transcription: "/teu/"},
+            {word: "kel", translation: "он, она, оно", transcription: "/kel/"},
+            {word: "meula", translation: "мы", transcription: "/'meu.la/"},
+            {word: "teula", translation: "вы", transcription: "/'teu.la/"},
+            {word: "keula", translation: "они", transcription: "/'keu.la/"},
+            {word: "man", translation: "мой", transcription: "/man/"},
+            {word: "teun", translation: "твой", transcription: "/teun/"},
+            {word: "keun", translation: "его, её", transcription: "/keun/"},
+            {word: "mitan", translation: "наш", transcription: "/'mi.tan/"},
+            {word: "teulan", translation: "ваш", transcription: "/'teu.lan/"},
+            {word: "keulan", translation: "их", transcription: "/'keu.lan/"},
+            {word: "razi", translation: "неопределённая личность", transcription: "/ɹa.'ʃi/"},
+            {word: "razila", translation: "неопределённые личности", transcription: "/ɹa.'ʃi.la/"},
+            {word: "kai", translation: "кто", transcription: "/kai/"},
+            {word: "kou", translation: "что", transcription: "/kou/"},
+            {word: "kan", translation: "где", transcription: "/kan/"},
+            {word: "kas", translation: "как", transcription: "/kas/"},
+            {word: "kama", translation: "почему", transcription: "/ka.'ma/"},
+            {word: "si", translation: "это", transcription: "/si/"},
+            {word: "sen", translation: "то", transcription: "/sen/"},
+            {word: "orit", translation: "красивый", transcription: "/o.'ɹit/"},
+            {word: "moran", translation: "холодный", transcription: "/mo.'ɹan/"},
+            {word: "siran", translation: "теплый", transcription: "/si.'ɹan/"},
+            {word: "teran", translation: "грязный", transcription: "/te.'ɹan/"},
+            {word: "kleran", translation: "чистый", transcription: "/kle.'ɹan/"},
+            {word: "kaan", translation: "сильный", transcription: "/ka:n/"},
+            {word: "kinan", translation: "любимый", transcription: "/ki.'nan/"},
+            {word: "nuitan", translation: "грустный", transcription: "/nui.'tan/"},
+            {word: "sote", translation: "злой", transcription: "/so.'te/"},
+            {word: "koutan", translation: "желанный", transcription: "/kou.'tan/"},
+            {word: "upaenan", translation: "открытый", transcription: "/u.pae.'nan/"},
+            {word: "tsemonan", translation: "закрытый", transcription: "/tse.no.'nan/"},
+            {word: "uresan", translation: "радостный", transcription: "/u.re.'san/"},
+            {word: "kienan", translation: "умный", transcription: "/kie.'nan/"},
+            {word: "lumenan", translation: "светлый", transcription: "/lu.me.'nan/"},
+            {word: "noksan", translation: "тёмный", transcription: "/nok.'san/"},
+            {word: "kelunan", translation: "холодный", transcription: "/ke.lu.'nan/"},
+            {word: "ites", translation: "видеть", transcription: "/i.'tes/"},
+            {word: "kies", translation: "знать", transcription: "/kies/"},
+            {word: "uoku", translation: "делать", transcription: "/'uo.ku/"},
+            {word: "ipuse", translation: "идти", transcription: "/i.pu.'se/"},
+            {word: "aulise", translation: "говорить", transcription: "/au.li.'se/"},
+            {word: "kienae", translation: "иметь", transcription: "/'kie.nae/"},
+            {word: "inase", translation: "чувствовать", transcription: "/i.na.'se/"},
+            {word: "kaese", translation: "думать", transcription: "/kae.'se/"},
+            {word: "kaina", translation: "давать", transcription: "/kai.'na/"},
+            {word: "sanes", translation: "спать", transcription: "/sa.'nes/"},
+            {word: "koutse", translation: "хотеть", transcription: "/kou.'tse/"},
+            {word: "uimse", translation: "слушать", transcription: "/uim.'se/"},
+            {word: "upaese", translation: "открывать", transcription: "/u.pae.'se/"},
+            {word: "tsemose", translation: "закрывать", transcription: "/tse.mo.'se/"},
+            {word: "iesinse", translation: "предлагать", transcription: "/ie.sin.'se/"},
+            {word: "ra", translation: "да", transcription: "/ɹa/"},
+            {word: "ren", translation: "нет", transcription: "/ɹen/"},
+            {word: "rensu", translation: "наверное", transcription: "/'ɹen.su/"},
+            {word: "re", translation: "не", transcription: "/ɹe/"},
+            {word: "ne", translation: "вопросительная частица", transcription: "/ne/"},
+            {word: "en", translation: "в, внутри", transcription: "/en/"},
+            {word: "su", translation: "на, над", transcription: "/su/"},
+            {word: "isu", translation: "с, вместе", transcription: "/i.'su/"},
+            {word: "isuren", translation: "без", transcription: "/i.'su.ɹen/"},
+            {word: "til", translation: "к, до", transcription: "/til/"},
+            {word: "e", translation: "и", transcription: "/e/"},
+            {word: "ora", translation: "или", transcription: "/o.'ɹa/"},
+            {word: "ine", translation: "но", transcription: "/'i.ne/"},
+            {word: "kau", translation: "потому что", transcription: "/kau/"},
+            {word: "ima", translation: "сейчас", transcription: "/i.'ma/"},
+            {word: "sora", translation: "тогда", transcription: "/so.'ɹa/"},
+            {word: "misa", translation: "более", transcription: "/mi.'sa/"},
+            {word: "mena", translation: "менее", transcription: "/me.'na/"},
+            {word: "mesa", translation: "самый", transcription: "/me.'sa/"},
+            {word: "ite", translation: "вид", transcription: "/i.'te/"},
+            {word: "kie", translation: "знание", transcription: "/kie/"},
+            {word: "kape", translation: "дело", transcription: "/ka.'pe/"},
+            {word: "ina", translation: "чувство", transcription: "/i.'na/"},
+            {word: "kae", translation: "мысль", transcription: "/kae/"},
+            {word: "sane", translation: "сон", transcription: "/sa.'ne/"},
+            {word: "uim", translation: "слух", transcription: "/uim/"},
+            {word: "upae", translation: "открытие", transcription: "/u.'pae/"},
+            {word: "iesin", translation: "предложение", transcription: "/ie.'sin/"},
+            {word: "kin", translation: "любовь", transcription: "/kin/"},
+            {word: "nuit", translation: "грусть", transcription: "/nuit/"},
+            {word: "ka", translation: "сила", transcription: "/ka/"},
+            {word: "kout", translation: "желание", transcription: "/kout/"},
+            {word: "akua", translation: "вода", transcription: "/a.'kua/"},
+            {word: "tera", translation: "земля", transcription: "/te.'ɹa/"},
+            {word: "mane", translation: "ветер", transcription: "/ma.'ne/"},
+            {word: "lumen", translation: "свет", transcription: "/'lu.men/"},
+            {word: "piro", translation: "огонь", transcription: "/pi.'ɹo/"},
+            {word: "kelu", translation: "лёд", transcription: "/ke.'lu/"},
+            {word: "noks", translation: "тьма", transcription: "/noks/"},
+            {word: "atapo", translation: "голова", transcription: ""},
+            {word: "okulo", translation: "глаз", transcription: ""},
+            {word: "neu", translation: "нос", transcription: ""},
+            {word: "kuzi", translation: "рот", transcription: ""},
+            {word: "auri", translation: "ухо", transcription: ""},
+            {word: "zila", translation: "язык", transcription: ""},
+            {word: "kali", translation: "волосы", transcription: ""},
+            {word: "koto", translation: "тело", transcription: ""},
+            {word: "kanra", translation: "сердце", transcription: ""},
+            {word: "akro", translation: "кровь", transcription: ""},
+            {word: "pan", translation: "спина", transcription: ""},
+            {word: "zisuto", translation: "живот", transcription: ""},
+            {word: "ponu", translation: "кость", transcription: ""},
+            {word: "surin", translation: "кожа", transcription: ""},
+            {word: "and", translation: "рука", transcription: ""},
+            {word: "ano", translation: "плечо", transcription: ""},
+            {word: "kar", translation: "палец", transcription: ""},
+            {word: "itu", translation: "нога", transcription: ""},
+            {word: "ito", translation: "колено", transcription: ""},
+            {word: "rons", translation: "легкие", transcription: ""},
+            {word: "koutla", translation: "желания", transcription: "/kout.'la/"},
+            {word: "upaela", translation: "открытия", transcription: "/u.'pae.la/"},
+            {word: "iesinla", translation: "предложения", transcription: "/ie.sin.'la/"},
+            {word: "sanela", translation: "сны", transcription: "/sa.ne.'la/"},
+            {word: "kaela", translation: "мысли", transcription: "/kae.'la/"},
+            {word: "inala", translation: "чувства", transcription: "/i.na.'la/"},
+            {word: "kiela", translation: "знания", transcription: "/kie.'la/"},
+            {word: "un", translation: "один", transcription: "/un/"},
+            {word: "tuo", translation: "два", transcription: "/tuo/"},
+            {word: "lei", translation: "три", transcription: "/lei/"},
+            {word: "kuan", translation: "четыре", transcription: "/kuan/"},
+            {word: "kain", translation: "пять", transcription: "/kain/"},
+            {word: "zi", translation: "шесть", transcription: "/ʃi/"},
+            {word: "septem", translation: "семь", transcription: "/'sep.tem/"},
+            {word: "okuto", translation: "восемь", transcription: "/o.ku.'to/"},
+            {word: "none", translation: "девять", transcription: "/'no.ne/"},
+            {word: "ede", translation: "десять", transcription: "/'e.de/"},
+            {word: "sent", translation: "сто", transcription: "/sent/"},
+            {word: "mirle", translation: "тысяча", transcription: "/'miɹ.le/"},
+            {word: "mile", translation: "миллион", transcription: "/'mil.le/"},
+            {word: "milione", translation: "миллиард", transcription: "/mi.li.'on/"},
+            {word: "une", translation: "первый", transcription: "/'u.ne/"},
+            {word: "tuone", translation: "второй", transcription: "/'tuo.ne/"},
+            {word: "leine", translation: "третий", transcription: "/'lei.ne/"},
+            {word: "kuane", translation: "четвертый", transcription: "/'kua.ne/"},
+            {word: "kaine", translation: "пятый", transcription: "/'kai.ne/"},
+            {word: "mi", translation: "много", transcription: "/mi/"},
+            {word: "me", translation: "мало", transcription: "/me/"},
+            {word: "minme", translation: "средне", transcription: "/'min.me/"},
+            {word: "rem", translation: "все", transcription: "/ɹem/"},
+            {word: "remu", translation: "каждый", transcription: "/'ɹe.mu/"},
+            {word: "zero", translation: "ноль", transcription: "/'ʃe.ɹo/"},
+            {word: "liu", translation: "имя", transcription: "/liu/"},
+            {word: "riliu", translation: "фамилия", transcription: "/'ɹi.liu/"},
+            {word: "ini", translation: "возраст", transcription: "/i.'ni/"},
+            {word: "sutir", translation: "до сих пор", transcription: "/su.'tiɹ/"},
+            {word: "oruado", translation: "вперед", transcription: "/o.'ɹua.do/"},
+            {word: "ako", translation: "назад", transcription: "/'a.ko/"},
+            {word: "ee", translation: "эх", transcription: "/e:/"},
+            {word: "ai", translation: "аа", transcription: "/a:i/"},
+            {word: "um", translation: "упс", transcription: "/um/"},
+            {word: "ie", translation: "эй", transcription: "/ie/"},
+            {word: "m", translation: "ну", transcription: "/m/"},
+            {word: "lala", translation: "да да", transcription: "/laɾa/"},
+            {word: "toʒa", translation: "вуаля", transcription: "/to.'ʒa:/"},
+            {word: "oo", translation: "ого", transcription: "/o:/"},
+            {word: "ilia", translation: "Илья", transcription: "/ilia/"} 
+        ];
+
+        // Готовые предложения от пользователя
+        const sentencesData = [
+            {
+                type: 'audio_choice',
+                prompt: 'Как тебя зовут?',
+                correctText: 'kas teun liu ne?',
+                wrongText: 'kas teun lio?',
+                correctAudio: 'nameRIGHT',
+                wrongAudio: 'nameWRONG'
+            },
+            {
+                type: 'audio_choice',
+                prompt: 'Мое имя Илья',
+                correctText: 'ma liu si ilia',
+                wrongText: 'ma liu sen ilia',
+                correctAudio: 'iliaRIGHT',
+                wrongAudio: 'iliaWRONG'
+            },
+            {
+                type: 'construct',
+                prompt: 'Переведи: "Я с Ильёй"', // Исправил "мое имя илья" на "я с ильей", так как код ma isu ilia
+                target: ['ma', 'isu', 'ilia'],
+                audio: 'withilia' // Имя файла без mp3
+            },
+            {
+                type: 'construct',
+                prompt: 'Переведи: "Мое имя Илья"',
+                target: ['ma', 'liu', 'si', 'ilia'],
+                audio: 'iliaRIGHT'
+            }
+        ];
+
+        const syllablesData = {
+            vowels: ['a', 'i', 'u', 'e', 'o', 'ai', 'iu', 'oi', 'au', 'eu'],
+            consonants: ['k', 'n', 'm']
+        };
+
+        // --- STATE ---
+        let state = {
+            mode: null, // 'words', 'sentences', 'lesson'
+            queue: [],
+            currentIndex: 0,
+            score: 0,
+            selectedVoice: 'ritsu', // 'ritsu' or 'nurse'
+            currentSentenceBuild: [],
+            selectedOptionIndex: -1
+        };
+
+        // --- AUDIO SYSTEM ---
+        function playAudio(filename) {
+            // Если это слог К
+            if (filename.startsWith('k_syllable_')) {
+                // filename format: k_syllable_[vowel]
+                const vowel = filename.split('_')[2];
+                // ka1 or ka2 based on voice
+                const suffix = state.selectedVoice === 'ritsu' ? '1' : '2';
+                // Формируем имя: ka1.mp3
+                const realName = 'k' + vowel + suffix + '.wav';
+                new Audio('./audio/' + realName).play().catch(e => console.log('Audio missing: ' + realName));
+                return;
+            }
+
+            // Обычные файлы
+            const path = './audio/' + filename + '.wav';
+            new Audio(path).play().catch(e => console.log('Audio missing: ' + path));
+        }
+
+        function playSyllable(consonant, vowel) {
+            let filename;
+            if (consonant === 'k') {
+                filename = 'k_syllable_' + vowel; // Special handling inside playAudio
+            } else {
+                // ma1, na1 (default to 1)
+                filename = consonant + vowel + '1';
+            }
+            playAudio(filename);
+        }
+
+        // --- NAVIGATION ---
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + id).classList.add('active');
+        }
+
+        function showMenu() {
+            showScreen('menu');
+        }
+
+        function startApp(mode) {
+            state.mode = mode;
+            state.score = 0;
+            state.currentIndex = 0;
+
+            if (mode === 'lessons') {
+                renderLesson();
+                showScreen('lesson');
+                return;
+            }
+
+            // Генерация очереди заданий
+            state.queue = [];
+            if (mode === 'sentences') {
+                // Перемешиваем предложения
+                state.queue = [...sentencesData].sort(() => 0.5 - Math.random());
+            } else if (mode === 'words') {
+                // 10 случайных слов
+                for(let i=0; i<10; i++) {
+                    const word = dictionary[Math.floor(Math.random() * dictionary.length)];
+                    // Тип: ru->mars или mars->ru
+                    state.queue.push({
+                        type: 'word_trans',
+                        dir: Math.random() > 0.5 ? 'ru_mars' : 'mars_ru',
+                        data: word
+                    });
+                }
+            } else if (mode === 'pronunciation') {
+                 // 10 заданий: найди транскрипцию
+                 for(let i=0; i<10; i++) {
+                    const word = dictionary[Math.floor(Math.random() * dictionary.length)];
+                    state.queue.push({
+                        type: 'pronunciation',
+                        data: word
+                    });
+                }
+            }
+
+            showScreen('quiz');
+            renderQuestion();
+        }
+
+        // --- RENDERERS ---
+
+        function renderQuestion() {
+            const q = state.queue[state.currentIndex];
+            const area = document.getElementById('questionArea');
+            const progress = (state.currentIndex / state.queue.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            resetActionBar();
+
+            if (state.mode === 'sentences') {
+                if (q.type === 'construct') {
+                    renderSentenceConstruct(q, area);
+                } else if (q.type === 'audio_choice') {
+                    renderSentenceChoice(q, area);
+                }
+            } else {
+                renderWordQuiz(q, area);
+            }
+        }
+
+        function renderSentenceConstruct(q, area) {
+            state.currentSentenceBuild = [];
+            
+            // Создаем пул слов (правильные + 3 лишних)
+            const allWords = [...dictionary.map(w => w.word)];
+            const wrongWords = allWords.filter(w => !q.target.includes(w))
+                                       .sort(() => 0.5 - Math.random())
+                                       .slice(0, 3);
+            
+            let pool = [...q.target, ...wrongWords].sort(() => 0.5 - Math.random());
+
+            let html = `
+                <div class="prompt-text">Переведите предложение</div>
+                <div class="target-word" style="font-size: 1.5rem;">${q.prompt}</div>
+                ${q.audio ? `<button class="audio-btn" onclick="playAudio('${q.audio}')">🔊</button>` : ''}
+                
+                <div class="sentence-slot-area" id="slots"></div>
+                
+                <div class="word-bank" id="bank">
+                    ${pool.map(word => `<div class="word-chip" onclick="moveWord(this, '${word}')">${word}</div>`).join('')}
+                </div>
+            `;
+            area.innerHTML = html;
+        }
+
+        function moveWord(el, word) {
+            const slots = document.getElementById('slots');
+            const bank = document.getElementById('bank');
+            
+            if (el.parentElement === bank) {
+                slots.appendChild(el);
+                state.currentSentenceBuild.push(word);
+            } else {
+                bank.appendChild(el);
+                const idx = state.currentSentenceBuild.indexOf(word);
+                if (idx > -1) state.currentSentenceBuild.splice(idx, 1);
+            }
+        }
+
+        function renderSentenceChoice(q, area) {
+            state.selectedOptionIndex = -1;
+            // Перемешиваем варианты (0 - правильный, 1 - неправильный в исходных данных)
+            // Но нам нужно сохранить связь с аудио.
+            // Создадим массив объектов опций
+            const options = [
+                { text: q.correctText, isCorrect: true, audio: q.correctAudio },
+                { text: q.wrongText, isCorrect: false, audio: q.wrongAudio }
+            ].sort(() => 0.5 - Math.random());
+
+            // Сохраняем текущие опции в стейт, чтобы потом проверить
+            state.currentOptions = options;
+
+            let html = `
+                <div class="prompt-text">Выберите правильный перевод</div>
+                <div class="target-word" style="font-size: 1.5rem;">${q.prompt}</div>
+                
+                <div class="options-grid">
+                    ${options.map((opt, idx) => `
+                        <div class="btn-option" onclick="selectOption(${idx}, '${opt.audio}')" id="opt-${idx}">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:20px; height:20px; border:2px solid #ccc; border-radius:50%;" class="radio-ind"></div>
+                                <span>${opt.text}</span>
+                                <span style="margin-left:auto; color:var(--secondary)">🔊</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            area.innerHTML = html;
+        }
+
+        function selectOption(idx, audioFile) {
+            state.selectedOptionIndex = idx;
+            document.querySelectorAll('.btn-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById('opt-' + idx).classList.add('selected');
+            if(audioFile) playAudio(audioFile);
+        }
+
+        function renderWordQuiz(q, area) {
+            state.selectedOptionIndex = -1;
+            const correctWord = q.data;
+            
+            // Генерируем неправильные ответы
+            const wrongs = dictionary.filter(w => w.word !== correctWord.word)
+                                     .sort(() => 0.5 - Math.random())
+                                     .slice(0, 3);
+            const options = [correctWord, ...wrongs].sort(() => 0.5 - Math.random());
+            state.currentOptions = options; // Сохраняем для проверки
+
+            let prompt, mainText;
+            if (q.type === 'pronunciation') {
+                prompt = "Как это произносится?";
+                mainText = correctWord.word;
+            } else if (q.dir === 'ru_mars') {
+                prompt = "Как это на марсриянском?";
+                mainText = correctWord.translation;
+            } else {
+                prompt = "Что это значит?";
+                mainText = correctWord.word;
+            }
+
+            let html = `
+                <div class="prompt-text">${prompt}</div>
+                <div class="target-word">${mainText}</div>
+                <div class="options-grid">
+                    ${options.map((opt, idx) => {
+                        let txt;
+                        if (q.type === 'pronunciation') txt = opt.transcription;
+                        else if (q.dir === 'ru_mars') txt = opt.word;
+                        else txt = opt.translation;
+                        
+                        return `<div class="btn-option" onclick="selectSimpleOption(${idx})" id="opt-${idx}">
+                            ${txt}
+                        </div>`
+                    }).join('')}
+                </div>
+            `;
+            area.innerHTML = html;
+        }
+
+        function selectSimpleOption(idx) {
+            state.selectedOptionIndex = idx;
+            document.querySelectorAll('.btn-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById('opt-' + idx).classList.add('selected');
+        }
+
+        // --- CHECK LOGIC ---
+
+        function checkAnswer() {
+            const q = state.queue[state.currentIndex];
+            let isCorrect = false;
+            let correctText = "";
+
+            if (state.mode === 'sentences') {
+                if (q.type === 'construct') {
+                    // Сравниваем массивы
+                    const answer = state.currentSentenceBuild.join(' ');
+                    const target = q.target.join(' ');
+                    isCorrect = (answer === target);
+                    correctText = target;
+                } else if (q.type === 'audio_choice') {
+                    if (state.selectedOptionIndex === -1) return;
+                    isCorrect = state.currentOptions[state.selectedOptionIndex].isCorrect;
+                    correctText = q.correctText;
+                }
+            } else {
+                // Words
+                if (state.selectedOptionIndex === -1) return;
+                const selected = state.currentOptions[state.selectedOptionIndex];
+                isCorrect = (selected.word === q.data.word);
+                
+                if (q.type === 'pronunciation') correctText = q.data.transcription;
+                else if (q.dir === 'ru_mars') correctText = q.data.word;
+                else correctText = q.data.translation;
+            }
+
+            const bar = document.getElementById('actionBar');
+            const msg = document.getElementById('feedbackMsg');
+            
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'block';
+
+            if (isCorrect) {
+                bar.className = 'action-bar correct';
+                msg.textContent = "Правильно!";
+                new Audio('https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3').play().catch(()=>{}); // Placeholder sound
+                state.score++;
+            } else {
+                bar.className = 'action-bar wrong';
+                msg.innerHTML = `Неверно.<br>Правильный ответ: ${correctText}`;
+                new Audio('https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3').play().catch(()=>{});
+            }
+        }
+
+        function nextQuestion() {
+            state.currentIndex++;
+            if (state.currentIndex >= state.queue.length) {
+                showResults();
+            } else {
+                renderQuestion();
+            }
+        }
+
+        function showResults() {
+            showScreen('results');
+            document.getElementById('resultText').textContent = 
+                `Вы набрали ${state.score} из ${state.queue.length}`;
+        }
+
+        function resetActionBar() {
+            const bar = document.getElementById('actionBar');
+            bar.className = 'action-bar';
+            document.getElementById('feedbackMsg').textContent = '';
+            document.getElementById('checkBtn').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        // --- LESSON LOGIC ---
+        function renderLesson() {
+            const grid = document.getElementById('syllableGrid');
+            grid.innerHTML = '';
+
+            syllablesData.consonants.forEach(cons => {
+                syllablesData.vowels.forEach(vow => {
+                    const cell = document.createElement('div');
+                    cell.className = 'syllable-card';
+                    cell.onclick = () => playSyllable(cons, vow);
+                    cell.innerHTML = `
+                        <div class="syllable-main">${cons}${vow}</div>
+                        <div class="syllable-sub">/${cons}${vow}/</div>
+                    `;
+                    grid.appendChild(cell);
+                });
+            });
+        }
+
+        function setVoice(voice) {
+            state.selectedVoice = voice;
+            document.querySelectorAll('.voice-toggle').forEach(b => b.classList.remove('active'));
+            document.getElementById('voice-' + voice).classList.add('active');
+        }
+
+    </script>
+</body>
+</html>
