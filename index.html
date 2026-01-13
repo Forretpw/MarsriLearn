@@ -627,17 +627,46 @@
 
         // --- AUDIO SYSTEM ---
         function playAudio(filename) {
-            // Если это слог К
+            let finalFilename = filename;
+
+            // 1. Логика для слогов (K, N, M)
             if (filename.startsWith('k_syllable_')) {
-                // filename format: k_syllable_[vowel]
                 const vowel = filename.split('_')[2];
-                // ka1 or ka2 based on voice
                 const suffix = state.selectedVoice === 'ritsu' ? '1' : '2';
-                // Формируем имя: ka1.mp3
-                const realName = 'k' + vowel + suffix + '.wav';
-                new Audio('./audio/' + realName).play().catch(e => console.log('Audio missing: ' + realName));
-                return;
+                finalFilename = 'k' + vowel + suffix;
+            } 
+            // 2. Логика рандома для предложений (nameWRONG, nameRIGHT и т.д.)
+            else {
+                // Список имен файлов, у которых есть две версии (1 и 2)
+                const randomFiles = [
+                    'nameRIGHT', 
+                    'nameWRONG', 
+                    'iliaRIGHT', 
+                    'iliaWRONG'
+                ];
+
+                if (randomFiles.includes(filename)) {
+                    // Выбираем случайно 1 или 2
+                    const randomNumber = Math.floor(Math.random() * 2) + 1;
+                    finalFilename = filename + randomNumber;
+                }
             }
+
+            // Формируем итоговый путь к файлу
+            const path = './audio/' + finalFilename + '.wav';
+            
+            console.log("Играю файл:", path); // Чтобы ты видел в консоли какой именно файл выбрался
+
+            const audio = new Audio(path);
+            audio.play().catch(e => {
+                console.error('Ошибка: файл не найден или не загружен:', path);
+                // Если файл с цифрой (например nameRIGHT1) не найден, 
+                // пробуем на всякий случай сыграть без цифры (nameRIGHT)
+                if (finalFilename !== filename) {
+                    new Audio('./audio/' + filename + '.wav').play().catch(() => {});
+                }
+            });
+        }
 
             // Обычные файлы
             const path = './audio/' + filename + '.wav';
