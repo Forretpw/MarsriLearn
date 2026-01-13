@@ -603,6 +603,18 @@
             },
             {
                 type: 'construct',
+                prompt: 'Переведи: "Ma isu ilia"',
+                target: ['Я', 'с', 'Ильёй'],
+                audio: 'withilia'
+            },
+            {
+                type: 'construct',
+                prompt: 'Переведи: "Ma liu si ilia"',
+                target: ['меня', 'зовут', 'Илья'],
+                audio: 'iliaRIGHT'
+            },
+            {
+                type: 'construct',
                 prompt: 'Переведи: "Мое имя Илья"',
                 target: ['ma', 'liu', 'si', 'ilia'],
                 audio: 'iliaRIGHT'
@@ -642,7 +654,8 @@
                     'nameRIGHT', 
                     'nameWRONG', 
                     'iliaRIGHT', 
-                    'iliaWRONG'
+                    'iliaWRONG',
+                    'withilia'
                 ];
 
                 if (randomFiles.includes(filename)) {
